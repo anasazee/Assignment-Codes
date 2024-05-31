@@ -1,0 +1,86 @@
+% Prompt user for inputs
+nameLength = input('Enter length of name (4 or 7): ');
+twoSameAlphabets = input('Can the name have 2 same alphabets together? (yes or no): ', 's');
+gender = input('Is it a girl or boy name? (girl or boy): ', 's');
+searchMethod = input('Enter search method (DFS or BFS): ', 's');
+
+% Define the dictionary based on gender
+if strcmpi(gender, 'girl')
+    dictionaryFile = 'girls.txt';
+elseif strcmpi(gender, 'boy')
+    dictionaryFile = 'boys.txt';
+else
+    error('Invalid gender. Please enter "girl" or "boy".');
+end
+
+% Read names from the dictionary file
+fid = fopen(dictionaryFile, 'r');
+dictionary = textscan(fid, '%s');
+fclose(fid);
+dictionary = dictionary{1};
+
+% Initialize variables to store found names
+foundName = false;
+successfulPath = '';
+
+% Perform Depth-First Search
+if strcmpi(searchMethod, 'DFS')
+    for i = 1:length(dictionary)
+        name = dictionary{i};
+        % Check if the name meets the criteria
+        if length(name) == nameLength
+            hasTwoSameAlphabets = false;
+            for j = 1:length(name)-1
+                if name(j) == name(j+1)
+                    hasTwoSameAlphabets = true;
+                    break;
+                end
+            end
+            if strcmpi(twoSameAlphabets, 'no') && ~hasTwoSameAlphabets
+                foundName = true;
+                successfulPath = name;
+                break;
+            elseif strcmpi(twoSameAlphabets, 'yes') && hasTwoSameAlphabets
+                foundName = true;
+                successfulPath = name;
+                break;
+            end
+        end
+    end
+elseif strcmpi(searchMethod, 'BFS')
+    % Perform Breadth-First Search
+    queue = dictionary;
+    while ~isempty(queue)
+        name = queue{1};
+        queue = queue(2:end);
+        % Check if the name meets the criteria
+        if length(name) == nameLength
+            hasTwoSameAlphabets = false;
+            for j = 1:length(name)-1
+                if name(j) == name(j+1)
+                    hasTwoSameAlphabets = true;
+                    break;
+                end
+            end
+            if strcmpi(twoSameAlphabets, 'no') && ~hasTwoSameAlphabets
+                foundName = true;
+                successfulPath = name;
+                break;
+            elseif strcmpi(twoSameAlphabets, 'yes') && hasTwoSameAlphabets
+                foundName = true;
+                successfulPath = name;
+                break;
+            end
+        end
+    end
+else
+    error('Invalid search method. Please enter "DFS" or "BFS".');
+end
+
+% Check if a valid name was found
+if foundName
+    disp(['Name found using ', upper(searchMethod), ':']);
+    disp(successfulPath);
+else
+    disp(['No valid name found using ', upper(searchMethod)]);
+end
