@@ -1,0 +1,75 @@
+% Define the diseases and their symptoms
+disease(flu, [fever, cough, sore_throat, fatigue]).
+disease(cold, [runny_nose, sneezing, sore_throat, mild_cough]).
+disease(stomach_virus, [nausea, vomiting, diarrhea, stomach_pain]).
+disease(allergy, [sneezing, itchy_eyes, runny_nose, rash]).
+disease(covid19, [fever, dry_cough, tiredness, loss_of_taste_or_smell]).
+
+% Define symptoms for easy identification
+symptom(fever).
+symptom(cough).
+symptom(sore_throat).
+symptom(fatigue).
+symptom(runny_nose).
+symptom(sneezing).
+symptom(mild_cough).
+symptom(nausea).
+symptom(vomiting).
+symptom(diarrhea).
+symptom(stomach_pain).
+symptom(itchy_eyes).
+symptom(rash).
+symptom(dry_cough).
+symptom(tiredness).
+symptom(loss_of_taste_or_smell).
+
+% Main predicate to start the diagnosis
+start_diagnosis :-
+    write('Welcome to Yankee Diagnostic Center.'), nl,
+    write('Please enter your name: '), read(Name),
+    write('Please enter your gender: '), read(Gender),
+    format('Hello ~w (~w), how can I help you? (Please describe your symptoms or the disease you suspect)', [Name, Gender]), nl,
+    read(UserInput),
+    extract_symptoms(UserInput, ExtractedSymptoms),
+    find_possible_diseases(ExtractedSymptoms, TracedDiseases),
+    ( TracedDiseases = []
+    -> write('No disease could be traced from the given symptoms.')
+    ;  confirm_disease_symptoms(TracedDiseases, ConfirmedDisease)
+    ).
+
+% Extract symptoms mentioned by the user
+extract_symptoms(Input, Symptoms) :-
+    atomic_list_concat(Words, ' ', Input),
+    findall(Symptom, (member(Word, Words), symptom(Word), Symptom = Word), Symptoms).
+
+% Find possible diseases based on initial symptoms
+find_possible_diseases(Symptoms, TracedDiseases) :-
+    findall(Disease, (disease(Disease, DiseaseSymptoms), intersection(Symptoms, DiseaseSymptoms, Intersection), Intersection \= []), TracedDiseases).
+
+% Confirm symptoms for traced diseases
+confirm_disease_symptoms([], _) :- write('No disease was confirmed.'), nl.
+confirm_disease_symptoms([Disease | Rest], ConfirmedDisease) :-
+    disease(Disease, DiseaseSymptoms),
+    confirm_symptoms(DiseaseSymptoms, ConfirmedSymptoms),
+    ( subset(DiseaseSymptoms, ConfirmedSymptoms)
+    -> format('Based on your symptoms, you might have: ~w', [Disease]), nl, ConfirmedDisease = Disease
+    ;  confirm_disease_symptoms(Rest, ConfirmedDisease)
+    ).
+
+% Confirm symptoms with true/false questions
+confirm_symptoms([], []).
+confirm_symptoms([Symptom | Rest], [Symptom | ConfirmedSymptoms]) :-
+    format('Do you have ~w? ', [Symptom]), read(true),
+    confirm_symptoms(Rest, ConfirmedSymptoms).
+confirm_symptoms([Symptom | Rest], ConfirmedSymptoms) :-
+    format('Do you have ~w? ', [Symptom]), read(false),
+    confirm_symptoms(Rest, ConfirmedSymptoms).
+
+% Utility to check if all elements of a list are in another list
+subset([], _).
+subset([H|T], List) :-
+    member(H, List),
+    subset(T, List).
+
+% Run the program
+:- start_diagnosis.
