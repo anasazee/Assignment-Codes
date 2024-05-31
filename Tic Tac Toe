@@ -1,0 +1,165 @@
+% Main script to run Tic-Tac-Toe game
+clc;
+clear;
+
+% Get the game mode from the user
+mode = input('Enter game mode (1 for User vs User, 2 for User vs Computer): ');
+
+% Get the players' names
+if mode == 1
+    player1 = input('Enter name for Player 1 (X): ', 's');
+    player2 = input('Enter name for Player 2 (O): ', 's');
+elseif mode == 2
+    player1 = input('Enter your name (X): ', 's');
+    player2 = 'Computer';
+else
+    fprintf('Invalid game mode. Please restart the script and enter 1 or 2.\n');
+    return;
+end
+
+% Initialize the board
+board = ['1','2','3'; '4','5','6'; '7','8','9'];
+
+% Print the initial board
+printBoard(board);
+
+% Main game loop
+for turn = 1:9
+    if mod(turn, 2) == 1
+        % Player 1 move
+        board = playerMove(board, 'X', player1);
+    else
+        if mode == 1
+            % Player 2 move
+            board = playerMove(board, 'O', player2);
+        else
+            % Computer move
+            board = aiMove(board);
+        end
+    end
+
+    % Print the current board
+    printBoard(board);
+
+    % Check for a winner
+    winner = checkWinner(board);
+    if winner ~= ' '
+        if winner == 'X'
+            fprintf('%s wins!\n', player1);
+        elseif winner == 'O'
+            fprintf('%s wins!\n', player2);
+        end
+        printBoard(board);
+        return;
+    end
+end
+
+% If no winner, it's a draw
+fprintf('It''s a draw!\n');
+printBoard(board);
+
+% Function to print the board
+function printBoard(board)
+    fprintf('\n');
+    fprintf(' %c | %c | %c \n', board(1, 1), board(1, 2), board(1, 3));
+    fprintf('---|---|---\n');
+    fprintf(' %c | %c | %c \n', board(2, 1), board(2, 2), board(2, 3));
+    fprintf('---|---|---\n');
+    fprintf(' %c | %c | %c \n', board(3, 1), board(3, 2), board(3, 3));
+    fprintf('\n');
+end
+
+% Function for player move
+function board = playerMove(board, symbol, playerName)
+    while true
+        move = input(sprintf('%s, enter your move (1-9): ', playerName), 's');
+        if ismember(move, board(:))
+            board(board == move) = symbol;
+            return;
+        else
+            fprintf('Invalid move! Try again.\n');
+        end
+    end
+end
+
+% Function for AI move using Minimax algorithm
+function board = aiMove(board)
+    bestScore = -Inf;
+    bestMove = '';
+    for i = 1:numel(board)
+        if board(i) ~= 'X' && board(i) ~= 'O'
+            original = board(i);
+            board(i) = 'O';
+            score = minimax(board, 0, false);
+            board(i) = original;
+            if score > bestScore
+                bestScore = score;
+                bestMove = original;
+            end
+        end
+    end
+    board(board == bestMove) = 'O';
+end
+
+% Minimax algorithm
+function score = minimax(board, depth, isMaximizing)
+    winner = checkWinner(board);
+    if winner == 'X'
+        score = -10 + depth;
+        return;
+    elseif winner == 'O'
+        score = 10 - depth;
+        return;
+    elseif ~any(board(:) ~= 'X' & board(:) ~= 'O')
+        score = 0;
+        return;
+    end
+
+    if isMaximizing
+        bestScore = -Inf;
+        for i = 1:numel(board)
+            if board(i) ~= 'X' && board(i) ~= 'O'
+                original = board(i);
+                board(i) = 'O';
+                score = minimax(board, depth + 1, false);
+                board(i) = original;
+                bestScore = max(bestScore, score);
+            end
+        end
+        score = bestScore;
+    else
+        bestScore = Inf;
+        for i = 1:numel(board)
+            if board(i) ~= 'X' && board(i) ~= 'O'
+                original = board(i);
+                board(i) = 'X';
+                score = minimax(board, depth + 1, true);
+                board(i) = original;
+                bestScore = min(bestScore, score);
+            end
+        end
+        score = bestScore;
+    end
+end
+
+% Function to check for a winner
+function winner = checkWinner(board)
+    winPatterns = [
+        1 2 3;
+        4 5 6;
+        7 8 9;
+        1 4 7;
+        2 5 8;
+        3 6 9;
+        1 5 9;
+        3 5 7;
+    ];
+    for i = 1:size(winPatterns, 1)
+        if board(winPatterns(i, 1)) == board(winPatterns(i, 2)) && ...
+           board(winPatterns(i, 2)) == board(winPatterns(i, 3))
+            winner = board(winPatterns(i, 1));
+            return;
+        end
+    end
+    winner = ' ';
+end
